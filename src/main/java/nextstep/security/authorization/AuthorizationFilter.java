@@ -12,36 +12,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class AuthorizationFilter extends OncePerRequestFilter {
 
+    AuthorizationManager<HttpServletRequest> authorizationManager = new RequestAuthorizationManager();
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isGranted = checkAuthorization(request, authentication);
-        if (!isGranted) {
-            throw new ForbiddenException();
-        }
-        filterChain.doFilter(request, response);
-    }
-
-    private boolean checkAuthorization(HttpServletRequest request, Authentication authentication) {
-        if (request.getRequestURI().equals("/members")) {
-            if (authentication == null) {
-               throw new AuthenticationException();
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            AuthorizationDecision decision = authorizationManager.check(authentication, request);
+            if (decision == null || !decision.isGranted()) {
+                throw new ForbiddenException();
             }
-
-            return authentication.getAuthorities().stream()
-                    .anyMatch(authority -> authority.equals("ADMIN"));
+            filterChain.doFilter(request, response);
+        } catch (ForbiddenException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         }
-        if (request.getRequestURI().equals("/members/me")) {
-            if (authentication == null) {
-                throw new AuthenticationException();
-            }
-            return authentication.isAuthenticated();
-        }
-
-        if (request.getRequestURI().equals("/search")) {
-            return true;
-        }
-        return false;
     }
 }
