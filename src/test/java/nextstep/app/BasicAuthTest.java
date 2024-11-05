@@ -17,7 +17,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -80,5 +83,30 @@ class BasicAuthTest {
         );
 
         response.andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("인증된 사용자는 자신의 정보를 조회할 수 있다.")
+    @Test
+    void request_success_members_me() throws Exception {
+        String token = Base64.getEncoder().encodeToString((TEST_ADMIN_MEMBER.getEmail() + ":" + TEST_ADMIN_MEMBER.getPassword()).getBytes());
+
+        ResultActions loginResponse = mockMvc.perform(get("/members/me")
+                .header("Authorization", "Basic " + token)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+        );
+        loginResponse.andExpect(status().isOk());
+        loginResponse.andExpect(jsonPath("$.email").value(TEST_ADMIN_MEMBER.getEmail()));
+    }
+
+    @DisplayName("인증되지 않은 사용자는 자신의 정보를 조회할 수 없다.")
+    @Test
+    void request_fail_members_me() throws Exception {
+        String token = Base64.getEncoder().encodeToString((TEST_ADMIN_MEMBER.getEmail() + ":" + "invalid").getBytes());
+
+        ResultActions loginResponse = mockMvc.perform(get("/members/me")
+                .header("Authorization", "Basic " + token)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+        );
+        loginResponse.andExpect(status().isUnauthorized());
     }
 }
