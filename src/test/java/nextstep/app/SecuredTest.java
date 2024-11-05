@@ -31,7 +31,7 @@ class SecuredTest {
     void request_search_success_with_admin_user() throws Exception {
         String token = Base64.getEncoder().encodeToString((TEST_ADMIN_MEMBER.getEmail() + ":" + TEST_ADMIN_MEMBER.getPassword()).getBytes());
 
-        ResultActions response = mockMvc.perform(get("/search")
+        ResultActions response = mockMvc.perform(get("/members")
                 .header("Authorization", "Basic " + token)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
         );
@@ -45,7 +45,7 @@ class SecuredTest {
     void request_search_fail_with_general_user() throws Exception {
         String token = Base64.getEncoder().encodeToString((TEST_USER_MEMBER.getEmail() + ":" + TEST_USER_MEMBER.getPassword()).getBytes());
 
-        ResultActions response = mockMvc.perform(get("/search")
+        ResultActions response = mockMvc.perform(get("/members")
                 .header("Authorization", "Basic " + token)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
         );

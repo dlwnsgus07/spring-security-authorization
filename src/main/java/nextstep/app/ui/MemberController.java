@@ -23,6 +23,7 @@ public class MemberController {
         this.memberRepository = memberRepository;
     }
 
+    @Secured("ADMIN")
     @GetMapping("/members")
     public ResponseEntity<List<Member>> list() {
         List<Member> members = memberRepository.findAll();
@@ -39,7 +40,6 @@ public class MemberController {
         return ResponseEntity.ok(member);
     }
 
-    @Secured("ADMIN")
     @GetMapping("/search")
     public ResponseEntity<List<Member>> search() {
         List<Member> members = memberRepository.findAll();
