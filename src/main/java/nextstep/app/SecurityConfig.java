@@ -1,13 +1,19 @@
 package nextstep.app;
 
+import java.util.ArrayList;
 import java.util.Set;
 import nextstep.app.domain.Member;
 import nextstep.app.domain.MemberRepository;
+import nextstep.security.access.AuthorityAuthorizationManager;
+import nextstep.security.access.PermitAllAuthorizationManager;
 import nextstep.security.authentication.AuthenticationException;
 import nextstep.security.authentication.BasicAuthenticationFilter;
 import nextstep.security.authentication.UsernamePasswordAuthenticationFilter;
+import nextstep.security.authorization.AuthorizationDecision;
 import nextstep.security.authorization.AuthorizationFilter;
+import nextstep.security.authorization.AuthorizationManager;
 import nextstep.security.authorization.CheckAdminFilter;
+import nextstep.security.authorization.RequestAuthorizationManager;
 import nextstep.security.config.DefaultSecurityFilterChain;
 import nextstep.security.config.DelegatingFilterProxy;
 import nextstep.security.config.FilterChainProxy;
@@ -20,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.http.HttpMethod;
 
 @EnableAspectJAutoProxy
 @Configuration
@@ -76,5 +83,14 @@ public class SecurityConfig {
                 }
             };
         };
+    }
+
+    //TODO AuthorityAuthorization 에 다양한 유저 Type에 대응할 수 있도록 변경
+    @Bean
+    public RequestAuthorizationManager requestAuthorizationManager() {
+        List<RequestMatcherEntry<AuthorizationManager>> mappings = new ArrayList<>();
+        mappings.add(new RequestMatcherEntry<>(new MvcRequestMatcher(HttpMethod.GET, "/members"), new AuthorityAuthorizationManager("ROLE")));
+        mappings.add(new RequestMatcherEntry<>(new MvcRequestMatcher(HttpMethod.GET, "/members/me"), new AuthorityAuthorizationManager("")));
+        mappings.add(new RequestMatcherEntry<>(new MvcRequestMatcher(HttpMethod.GET, "/search"), new PermitAllAuthorizationManager()));
     }
 }
